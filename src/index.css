@@ -1,4 +1,4 @@
-body {
+/* body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -10,4 +10,120 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+} */
+
+
+:root {
+  --primary-bg: #343541; 
+  --secondary-bg: #40414F; 
+  --primary-text: #ECECF1; 
+  --secondary-text: #A0A0A0; 
+  --primary-accent: #10A37F; 
+  --border-radius: 8px; 
+  --box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; 
 }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif; 
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  color: var(--primary-text);
+}
+
+a {
+  color: var(--primary-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: var(--primary-accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: var(--box-shadow);
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0e8e6c;
+}
+
+input, textarea {
+  background-color: var(--secondary-bg);
+  color: var(--primary-text);
+  border: 1px solid var(--secondary-bg);
+  padding: 10px;
+  border-radius: var(--border-radius);
+  width: 100%;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.card {
+  background-color: var(--secondary-bg);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-bottom: 20px;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-space-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .hr {
+  border: none;
+  height: 1px;
+  background-color: var(--secondary-text);
+  margin: 20px 0;
+} */
+
+/* code {
+  background-color: var(--secondary-bg);
+  color: var(--primary-accent);
+  padding: 2px 5px;
+  border-radius: var(--border-radius);
+} */
