@@ -1,8 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Signup from "./pages/signup/signup";
-import Login from "./pages/login/login";
-import Home from "./pages/home/home";
 import "./App.css";
+
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+
+import Home from "./pages/home/home";
+import Login from "./pages/login/login";
+import Signup from "./pages/signup/signup";
 
 const App = () => {
   return (
