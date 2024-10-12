@@ -13,6 +13,7 @@
     "ag-charts-community": "^10.2.0",
     "ag-charts-react": "^10.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "firebase": "^10.14.0",
     "nodemon": "^3.1.7",

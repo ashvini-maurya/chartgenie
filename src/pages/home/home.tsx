@@ -1,23 +1,38 @@
-import { signOut } from "firebase/auth";
-import React, { useEffect, useState } from "react";
-import { auth } from "../../firebase";
-import { useNavigate } from "react-router-dom";
-import CgSidebar from "../../components/sidebar/sidebar";
 import "./home.css";
-import CgButton from "../../components/button/button";
-import CgBottomSection from "../../components/bottom-section/bottom-section";
-import CgHomeHeader from "../../components/home-header/home-header";
-import CgChart from "../../components/chart/chart";
+
 import {
-  AgChartOptions,
   AgBarSeriesOptions,
-  AgLineSeriesOptions,
-  AgPieSeriesOptions,
+  AgChartOptions,
+  AgLineSeriesOptions
 } from "ag-charts-community";
+import { useEffect, useState } from "react";
+
+import CgBottomSection from "../../components/bottom-section/bottom-section";
+import CgButton from "../../components/button/button";
+import CgChart from "../../components/chart/chart";
+import CgHomeHeader from "../../components/home-header/home-header";
+import CgSidebar from "../../components/sidebar/sidebar";
+import { auth } from "../../firebase";
+import { signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface Chat {
+  title: string | null;
+  role: string;
+  content: string;
+}
 
 const Home = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState(null);
+  const [value, setValue] = useState<string>('');
+  const [message, setMessage] = useState<Message | null>(null);
+  const [previousChats, setPreviousChats] = useState<Chat[]>([]);
+  const [currentTitle, setCurrentTitle] = useState<string | null>(null);
   const [chartType, setChartType] = useState("line");
   const [options, setOptions] = useState<AgChartOptions>({
     // Data: Data to be displayed in the chart
@@ -48,27 +63,44 @@ const Home = () => {
       .catch((error) => alert(error));
   };
 
+   const currentChat = previousChats.filter(
+    (previousChat) => previousChat.title === currentTitle
+  );
+  const uniqueTitles = Array.from(
+    new Set(previousChats.map((previousChat) => previousChat.title))
+  );
+
   const getMessages = async () => {
     const options = {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify({
-        message: "Hello how are you?",
+        message: value,
       }),
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
+
     try {
-      const response = await fetch(
-        "http://localhost:8000/completions",
-        options
-      );
+      const response = await fetch('http://localhost:8000/completions', options);
       const data = await response.json();
-      console.log(data);
+      setMessage(data?.choices[0]?.message as Message);
     } catch (error) {
       console.error(error);
     }
   };
+
+  const createNewChat = () => {
+    setMessage(null);
+    setValue('');
+    setCurrentTitle(null);
+  };
+
+  const handleClick = (uniqueTitle: string | null) => {
+    setCurrentTitle(uniqueTitle);
+    setValue('');
+  };
+
   const handleChartType = (e: any) => {
     console.log(e.target.value, "event");
     setChartType(e.target.value);
@@ -140,15 +172,39 @@ const Home = () => {
     }
     setOptions(newOptions);
   }, [chartType]);
+
+useEffect(() => {
+    if (!currentTitle && value && message) {
+      setCurrentTitle(value);
+    }
+    if (currentTitle && value && message) {
+      setPreviousChats((previousChats) => [
+        ...previousChats,
+        {
+          title: currentTitle,
+          role: 'user',
+          content: value,
+        },
+        {
+          title: currentTitle,
+          role: message.role,
+          content: message.content,
+        },
+      ]);
+    }
+  }, [message, currentTitle, value]);
+
   return (
     <div className="app">
       <CgSidebar>
-        <CgButton type="button">New Chat</CgButton>
+        <CgButton type="button" onClick={createNewChat}>New Chat</CgButton>
         <nav>
           <ul className="history">
-            <li>hi1</li>
-            <li>hi2</li>
-            <li>hi3</li>
+            {uniqueTitles?.map((uniqueTitle, index) => (
+              <li key={index} onClick={() => handleClick(uniqueTitle)}>
+                {uniqueTitle}
+              </li>
+            ))}
           </ul>
         </nav>
       </CgSidebar>
@@ -164,8 +220,16 @@ const Home = () => {
           <div style={{ width: "100%" }}>
             <CgChart chartOptions={options} />
           </div>
+          <ul>
+          {currentChat?.map((chatMessage, index) => (
+            <li key={index}>
+              <p className="role">{chatMessage.role}</p>
+              <p>{chatMessage.content}</p>
+            </li>
+          ))}
+        </ul>
         </div>
-        <CgBottomSection getMessages={getMessages} />
+        <CgBottomSection getMessages={getMessages} value={value} onChange={(e) => setValue(e.target.value)} />
       </section>
     </div>
   );
