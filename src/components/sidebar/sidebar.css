@@ -1,0 +1,53 @@
+.sidebar {
+  position: fixed;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  z-index: 8;
+  opacity: 0;
+  top: 0rem;
+  left: -300px;
+  width: 300px;
+  height: 100%;
+  color: #252a32;
+  background: var(--secondary-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.24);
+  transition: all 0.5s cubic-bezier(0.6, 0.05, 0.28, 0.91);
+}
+
+.burger {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 9;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  transition: left 0.5s cubic-bezier(0.6, 0.05, 0.28, 0.91);
+}
+.burger-close {
+  display: none;
+}
+.burger.active {
+  left: 14rem;
+}
+.burger.active .burger-open {
+  display: none;
+}
+.burger.active .burger-close {
+  display: block;
+}
+
+.sidebar.active {
+  left: 0;
+  opacity: 1;
+}
+
+.sidebar .sidebar-body {
+  padding: 16px;
+  width: calc(100% - 32px);
+  padding-top: 50px;
+}
