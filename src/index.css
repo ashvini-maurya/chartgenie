@@ -12,28 +12,32 @@ code {
     monospace;
 } */
 
-
 :root {
-  --primary-bg: #343541; 
-  --secondary-bg: #40414F; 
-  --primary-text: #ECECF1; 
-  --secondary-text: #A0A0A0; 
-  --primary-accent: #10A37F; 
-  --border-radius: 8px; 
-  --box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; 
+  --primary-bg: #343541;
+  --secondary-bg: #40414f;
+  --primary-text: #ececf1;
+  --secondary-text: #a0a0a0;
+  --primary-accent: #10a37f;
+  --border-radius: 8px;
+  --box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', sans-serif; 
+  font-family: "Inter", sans-serif;
   background-color: var(--primary-bg);
   color: var(--primary-text);
   line-height: 1.5;
   font-size: 16px;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   color: var(--primary-text);
 }
@@ -63,18 +67,20 @@ button:hover {
   background-color: #0e8e6c;
 }
 
-input, textarea {
+input,
+textarea {
   background-color: var(--secondary-bg);
   color: var(--primary-text);
   border: 1px solid var(--secondary-bg);
   padding: 10px;
   border-radius: var(--border-radius);
-  width: 100%;
+  width: -webkit-fill-available;
   font-size: 16px;
   margin-bottom: 10px;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   outline: none;
   border-color: var(--primary-accent);
 }
