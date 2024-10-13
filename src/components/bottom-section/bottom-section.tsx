@@ -1,3 +1,5 @@
+import FileUpload from "../file-upload/file-upload";
+
 interface ICgBottomSection {
   getMessages: () => void;
   value: string;
@@ -14,6 +16,7 @@ const CgBottomSection = ({ getMessages, value, onChange }: ICgBottomSection) => 
           value={value}
           onChange={onChange}
         />
+        <FileUpload />
         <div id="submit" onClick={getMessages}>
           <svg
             width="32"
