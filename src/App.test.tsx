@@ -1,9 +1,16 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { prettyDOM, render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders learn react link', () => {
+// Mock the Firebase function
+jest.mock("firebase/auth", () => ({
+  signInWithEmailAndPassword: jest.fn(),
+}));
+
+jest.mock("firebase/auth", () => ({
+  getAuth: jest.fn(),
+}));
+
+test("render app", async () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText(/CHART GENIE/)).toBeInTheDocument();
 });
