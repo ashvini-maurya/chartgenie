@@ -148,3 +148,34 @@ li {
   font-weight: bold;
   margin-bottom: 5px;
 }
+
+.chart-selection-dropdown {
+  width: 150px;
+  padding: 8px;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  color: #333;
+  appearance: none;
+  outline: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-selection-dropdown:hover {
+  background-color: #e0e0e0;
+  border-color: #888;
+}
+
+.chart-selection-dropdown:focus {
+  border-color: #0073e6;
+  box-shadow: 0px 0px 4px rgba(0, 115, 230, 0.5);
+}
+
+.chart-selection-dropdown option {
+  background-color: #f5f5f5;
+  color: #333;
+}

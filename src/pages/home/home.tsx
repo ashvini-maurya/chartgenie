@@ -17,7 +17,9 @@ import CgBottomSection from "../../components/bottom-section/bottom-section";
 import CgButton from "../../components/button/button";
 import CgChart from "../../components/chart/chart";
 import CgHomeHeader from "../../components/home-header/home-header";
+import CgModal from "../../components/modal/modal";
 import CgSidebar from "../../components/sidebar/sidebar";
+import ChartCustomization from "../chart-customization/chart-customization";
 import Papa from "papaparse";
 import { auth } from "../../firebase";
 import { signOut } from "firebase/auth";
@@ -42,11 +44,22 @@ const Home = () => {
   const [currentTitle, setCurrentTitle] = useState<string | null>(null);
   const [chartType, setChartType] = useState("line");
   const lastMessageRef = useRef<HTMLLIElement | null>(null);
+  const [chartColor, setChartColor] = useState<string>("#4caf50");
+  const [xAxisLabel, setXAxisLabel] = useState<string>("X Axis");
+  const [yAxisLabel, setYAxisLabel] = useState<string>("Y Axis");
+  const [showLabels, setShowLabels] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const [options, setOptions] = useState<AgChartOptions>({
-   data: [],
-   series: [],
- });
+    data: [],
+    series: [],
+  });
+
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
 
 
   const handleLogout = async () => {
@@ -58,7 +71,7 @@ const Home = () => {
       .catch((error) => alert(error));
   };
 
-   const currentChat = previousChats.filter(
+  const currentChat = previousChats.filter(
     (previousChat) => previousChat.title === currentTitle
   );
   const uniqueTitles = Array.from(
@@ -72,11 +85,11 @@ const Home = () => {
     }
   }, [currentChat]);
 
-const getAttachment = (event: ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (file && file.type === "text/csv") {
-    Papa.parse(file, {
-         header: true,
+  const getAttachment = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "text/csv") {
+      Papa.parse(file, {
+        header: true,
         complete: (result) => {
           const parsedData = result.data as Record<string, any>[];
           const headers = Object.keys(parsedData[0] || {});
@@ -103,12 +116,12 @@ const getAttachment = (event: ChangeEvent<HTMLInputElement>) => {
             ],
           });
           console.log("Parsed data:", parsedData);
-         },
-       });
-  } else {
-    console.error("Please upload a valid CSV file.");
+        },
+      });
+    } else {
+      console.error("Please upload a valid CSV file.");
+    }
   }
-}
 
   const getMessages = async () => {
     if (!value.trim()) return;
@@ -163,12 +176,12 @@ const getAttachment = (event: ChangeEvent<HTMLInputElement>) => {
   }, []);
 
   const isBarOrLineSeries = (series: AgCartesianSeriesOptions | AgPolarSeriesOptions | AgHierarchySeriesOptions | AgTopologySeriesOptions | AgFlowProportionSeriesOptions | undefined): series is AgBarSeriesOptions | AgLineSeriesOptions => {
-  return series?.type === "bar" || series?.type === "line";
-};
+    return series?.type === "bar" || series?.type === "line";
+  };
 
-// const isPieSeries = (series: AgPieSeriesOptions): series is AgPieSeriesOptions => {
-//   return series.type === "pie";
-// };
+  // const isPieSeries = (series: AgPieSeriesOptions): series is AgPieSeriesOptions => {
+  //   return series.type === "pie";
+  // };
 
   useEffect(() => {
     let newOptions: AgChartOptions = options;
@@ -180,29 +193,43 @@ const getAttachment = (event: ChangeEvent<HTMLInputElement>) => {
             type: chartType,
             xKey: isBarOrLineSeries(options.series?.[0]) ? options.series?.[0]?.xKey || "x" : "",
             yKey: isBarOrLineSeries(options.series?.[0]) ? options.series?.[0]?.yKey || "y" : "",
+            fill: chartColor,
+            label: showLabels ? { enabled: true } : { enabled: false },
           } as AgBarSeriesOptions,
+        ],
+        axes: [
+          {
+            type: "category",
+            position: "bottom",
+            title: { text: xAxisLabel },
+          },
+          {
+            type: "number",
+            position: "left",
+            title: { text: yAxisLabel },
+          },
         ],
       };
     }
     else if (chartType === "pie") {
       if (options.series?.[0]?.type === "pie") {
         console.log("hello pie: ", options)
-      newOptions = {
-        data: options.data,
-        series: [
-          {
-            type: "pie",
-            angleKey: options.series?.[0]?.angleKey || "y",
-            labelKey: options.series?.[0]?.legendItemKey || "x",
-          } as AgPieSeriesOptions<any>,
-        ],
-      };
-    }
+        newOptions = {
+          data: options.data,
+          series: [
+            {
+              type: "pie",
+              angleKey: options.series?.[0]?.angleKey || "y",
+              labelKey: options.series?.[0]?.legendItemKey || "x",
+            } as AgPieSeriesOptions<any>,
+          ],
+        };
+      }
     }
     setOptions(newOptions);
-  }, [chartType]);
+  }, [chartType, chartColor, xAxisLabel, yAxisLabel, showLabels]);
 
-useEffect(() => {
+  useEffect(() => {
     if (!currentTitle && value && message) {
       setCurrentTitle(value);
     }
@@ -241,7 +268,19 @@ useEffect(() => {
       <section className="main">
         <CgHomeHeader onClick={handleLogout} />
         <div className="feed">
-          <select onChange={handleChartType} value={chartType}>
+          <button onClick={toggleModal}>Customize Chart</button>
+          <CgModal isOpen={isModalOpen} onClose={toggleModal}>
+            <ChartCustomization
+              chartColor={chartColor}
+              setChartColor={setChartColor}
+              xAxisLabel={xAxisLabel}
+              setXAxisLabel={setXAxisLabel}
+              yAxisLabel={yAxisLabel}
+              showLabels={showLabels}
+              setYAxisLabel={setYAxisLabel}
+              setShowLabels={(e) => setShowLabels(e)} />
+          </CgModal>
+          <select onChange={handleChartType} value={chartType} className="chart-selection-dropdown">
             <option value="bar">Bar</option>
             <option value="line">Line</option>
             <option value="pie">Pie</option>
@@ -251,22 +290,22 @@ useEffect(() => {
           </div>
           <ul>
             {currentChat?.map((chatMessage, index) => (
-              <li 
+              <li
                 key={`${chatMessage.role}-${index}`}
                 className={chatMessage.role === "user" ? "user-message" : "assistant-message"}
                 ref={index === currentChat.length - 1 ? lastMessageRef : null}
-                >
-                  <p className="role">{chatMessage.role}</p>
-                  <p>{chatMessage.content}</p>
+              >
+                <p className="role">{chatMessage.role}</p>
+                <p>{chatMessage.content}</p>
               </li>
             ))}
           </ul>
         </div>
-        <CgBottomSection 
-          getAttachment={getAttachment} 
-          getMessages={getMessages} 
-          value={value} 
-          onChange={(e) => setValue(e.target.value)} 
+        <CgBottomSection
+          getAttachment={getAttachment}
+          getMessages={getMessages}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
         />
       </section>
     </div>
