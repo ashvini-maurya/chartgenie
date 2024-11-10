@@ -2,16 +2,23 @@ import "./home.css";
 
 import {
   AgBarSeriesOptions,
+  AgCartesianSeriesOptions,
   AgChartOptions,
-  AgLineSeriesOptions
+  AgFlowProportionSeriesOptions,
+  AgHierarchySeriesOptions,
+  AgLineSeriesOptions,
+  AgPieSeriesOptions,
+  AgPolarSeriesOptions,
+  AgTopologySeriesOptions,
 } from "ag-charts-community";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 import CgBottomSection from "../../components/bottom-section/bottom-section";
 import CgButton from "../../components/button/button";
 import CgChart from "../../components/chart/chart";
 import CgHomeHeader from "../../components/home-header/home-header";
 import CgSidebar from "../../components/sidebar/sidebar";
+import Papa from "papaparse";
 import { auth } from "../../firebase";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -34,25 +41,13 @@ const Home = () => {
   const [previousChats, setPreviousChats] = useState<Chat[]>([]);
   const [currentTitle, setCurrentTitle] = useState<string | null>(null);
   const [chartType, setChartType] = useState("line");
+  const lastMessageRef = useRef<HTMLLIElement | null>(null);
+
   const [options, setOptions] = useState<AgChartOptions>({
-    // Data: Data to be displayed in the chart
-    data: [
-      { month: "Jan", avgTemp: 2.3, iceCreamSales: 162000 },
-      { month: "Mar", avgTemp: 6.3, iceCreamSales: 302000 },
-      { month: "May", avgTemp: 16.2, iceCreamSales: 800000 },
-      { month: "Jul", avgTemp: 22.8, iceCreamSales: 1254000 },
-      { month: "Sep", avgTemp: 14.5, iceCreamSales: 950000 },
-      { month: "Nov", avgTemp: 8.9, iceCreamSales: 200000 },
-    ],
-    // Series: Defines which chart type and data to use
-    series: [
-      {
-        type: chartType,
-        xKey: "month",
-        yKey: "iceCreamSales",
-      } as AgBarSeriesOptions,
-    ],
-  });
+   data: [],
+   series: [],
+ });
+
 
   const handleLogout = async () => {
     await signOut(auth)
@@ -70,7 +65,53 @@ const Home = () => {
     new Set(previousChats.map((previousChat) => previousChat.title))
   );
 
+  useEffect(() => {
+    // Scroll to the last message when currentChat changes
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentChat]);
+
+const getAttachment = (event: ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (file && file.type === "text/csv") {
+    Papa.parse(file, {
+         header: true,
+        complete: (result) => {
+          const parsedData = result.data as Record<string, any>[];
+          const headers = Object.keys(parsedData[0] || {});
+
+          if (headers.length < 2) {
+            console.error("CSV must contain at least two columns for X and Y axes.");
+            return;
+          }
+
+          const xAxis = headers[0];
+          const yAxis = headers[1];
+          setOptions({
+            data: parsedData.map((row) => ({
+              ...row,
+              [xAxis]: row[xAxis],
+              [yAxis]: Number(row[yAxis]),
+            })),
+            series: [
+              {
+                type: "line",
+                xKey: xAxis,
+                yKey: yAxis,
+              },
+            ],
+          });
+          console.log("Parsed data:", parsedData);
+         },
+       });
+  } else {
+    console.error("Please upload a valid CSV file.");
+  }
+}
+
   const getMessages = async () => {
+    if (!value.trim()) return;
     const options = {
       method: 'POST',
       body: JSON.stringify({
@@ -84,7 +125,16 @@ const Home = () => {
     try {
       const response = await fetch('http://localhost:8000/completions', options);
       const data = await response.json();
-      setMessage(data?.choices[0]?.message as Message);
+      const assistantMessage = data?.choices[0]?.message as Message;
+
+
+      setPreviousChats((prevChats) => [
+        ...prevChats,
+        { title: currentTitle, role: 'user', content: value },
+        { title: currentTitle, role: assistantMessage.role, content: assistantMessage.content },
+      ]);
+      setMessage(assistantMessage);
+      setValue('');
     } catch (error) {
       console.error(error);
     }
@@ -102,7 +152,6 @@ const Home = () => {
   };
 
   const handleChartType = (e: any) => {
-    console.log(e.target.value, "event");
     setChartType(e.target.value);
   };
 
@@ -113,62 +162,42 @@ const Home = () => {
     }
   }, []);
 
+  const isBarOrLineSeries = (series: AgCartesianSeriesOptions | AgPolarSeriesOptions | AgHierarchySeriesOptions | AgTopologySeriesOptions | AgFlowProportionSeriesOptions | undefined): series is AgBarSeriesOptions | AgLineSeriesOptions => {
+  return series?.type === "bar" || series?.type === "line";
+};
+
+// const isPieSeries = (series: AgPieSeriesOptions): series is AgPieSeriesOptions => {
+//   return series.type === "pie";
+// };
+
   useEffect(() => {
     let newOptions: AgChartOptions = options;
-    if (chartType === "bar") {
+    if (chartType === "bar" || chartType === "line") {
       newOptions = {
-        data: [
-          { month: "Jan", avgTemp: 2.3, iceCreamSales: 162000 },
-          { month: "Mar", avgTemp: 6.3, iceCreamSales: 302000 },
-          { month: "May", avgTemp: 16.2, iceCreamSales: 800000 },
-          { month: "Jul", avgTemp: 22.8, iceCreamSales: 1254000 },
-          { month: "Sep", avgTemp: 14.5, iceCreamSales: 950000 },
-          { month: "Nov", avgTemp: 8.9, iceCreamSales: 200000 },
-        ],
+        data: options.data,
         series: [
           {
-            type: "bar",
-            xKey: "month",
-            yKey: "iceCreamSales",
+            type: chartType,
+            xKey: isBarOrLineSeries(options.series?.[0]) ? options.series?.[0]?.xKey || "x" : "",
+            yKey: isBarOrLineSeries(options.series?.[0]) ? options.series?.[0]?.yKey || "y" : "",
           } as AgBarSeriesOptions,
         ],
       };
-    } else if (chartType === "line") {
+    }
+    else if (chartType === "pie") {
+      if (options.series?.[0]?.type === "pie") {
+        console.log("hello pie: ", options)
       newOptions = {
-        data: [
-          { month: "Jan", avgTemp: 2.3, iceCreamSales: 162000 },
-          { month: "Mar", avgTemp: 6.3, iceCreamSales: 302000 },
-          { month: "May", avgTemp: 16.2, iceCreamSales: 800000 },
-          { month: "Jul", avgTemp: 22.8, iceCreamSales: 1254000 },
-          { month: "Sep", avgTemp: 14.5, iceCreamSales: 950000 },
-          { month: "Nov", avgTemp: 8.9, iceCreamSales: 200000 },
-        ],
-        series: [
-          {
-            type: "line",
-            xKey: "month",
-            yKey: "iceCreamSales",
-          } as AgLineSeriesOptions,
-        ],
-      };
-    } else if (chartType === "pie") {
-      newOptions = {
-        data: [
-          { month: "Jan", avgTemp: 2.3, iceCreamSales: 162000 },
-          { month: "Mar", avgTemp: 6.3, iceCreamSales: 302000 },
-          { month: "May", avgTemp: 16.2, iceCreamSales: 800000 },
-          { month: "Jul", avgTemp: 22.8, iceCreamSales: 1254000 },
-          { month: "Sep", avgTemp: 14.5, iceCreamSales: 950000 },
-          { month: "Nov", avgTemp: 8.9, iceCreamSales: 200000 },
-        ],
+        data: options.data,
         series: [
           {
             type: "pie",
-            angleKey: "iceCreamSales",
-            legendItemKey: "month",
-          },
+            angleKey: options.series?.[0]?.angleKey || "y",
+            labelKey: options.series?.[0]?.legendItemKey || "x",
+          } as AgPieSeriesOptions<any>,
         ],
       };
+    }
     }
     setOptions(newOptions);
   }, [chartType]);
@@ -221,15 +250,24 @@ useEffect(() => {
             <CgChart chartOptions={options} />
           </div>
           <ul>
-          {currentChat?.map((chatMessage, index) => (
-            <li key={index}>
-              <p className="role">{chatMessage.role}</p>
-              <p>{chatMessage.content}</p>
-            </li>
-          ))}
-        </ul>
+            {currentChat?.map((chatMessage, index) => (
+              <li 
+                key={`${chatMessage.role}-${index}`}
+                className={chatMessage.role === "user" ? "user-message" : "assistant-message"}
+                ref={index === currentChat.length - 1 ? lastMessageRef : null}
+                >
+                  <p className="role">{chatMessage.role}</p>
+                  <p>{chatMessage.content}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-        <CgBottomSection getMessages={getMessages} value={value} onChange={(e) => setValue(e.target.value)} />
+        <CgBottomSection 
+          getAttachment={getAttachment} 
+          getMessages={getMessages} 
+          value={value} 
+          onChange={(e) => setValue(e.target.value)} 
+        />
       </section>
     </div>
   );
