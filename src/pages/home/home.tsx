@@ -55,12 +55,9 @@ const Home = () => {
     series: [],
   });
 
-
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
-
-
 
   const handleLogout = async () => {
     await signOut(auth)
@@ -74,12 +71,12 @@ const Home = () => {
   const currentChat = previousChats.filter(
     (previousChat) => previousChat.title === currentTitle
   );
+
   const uniqueTitles = Array.from(
     new Set(previousChats.map((previousChat) => previousChat.title))
   );
 
   useEffect(() => {
-    // Scroll to the last message when currentChat changes
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -123,6 +120,40 @@ const Home = () => {
     }
   }
 
+  const handleApiResponse = (csvString: string) => {
+    const parsedResult = Papa.parse<Record<string, string>>(csvString, { header: true });
+    const parsedData = parsedResult.data;
+
+    if (parsedData.length === 0) {
+      console.error("No data found in the response.");
+      return;
+    }
+
+    const headers = parsedResult.meta.fields;
+    if (!headers || headers.length < 2) {
+      console.error("CSV must contain at least two columns for X and Y axes.");
+      return;
+    }
+
+    const [xKey, yKey] = headers;
+
+    setOptions({
+      data: parsedData.map((row) => ({
+        ...row,
+        [xKey]: row[xKey],
+        // [yKey]: row[xKey]
+        [yKey]: Number(row[yKey]?.replace(/,/g, "") || 0),
+      })),
+      series: [
+        {
+          type: "line",
+          xKey,
+          yKey,
+        },
+      ],
+    });
+  };
+
   const getMessages = async () => {
     if (!value.trim()) return;
     const options = {
@@ -148,6 +179,10 @@ const Home = () => {
       ]);
       setMessage(assistantMessage);
       setValue('');
+
+      if (data?.choices[0]?.message?.content) {
+        handleApiResponse(data?.choices[0].message.content);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -168,20 +203,22 @@ const Home = () => {
     setChartType(e.target.value);
   };
 
+  const isBarOrLineSeries = (
+    series: AgCartesianSeriesOptions |
+      AgPolarSeriesOptions |
+      AgHierarchySeriesOptions |
+      AgTopologySeriesOptions |
+      AgFlowProportionSeriesOptions |
+      undefined): series is AgBarSeriesOptions | AgLineSeriesOptions => {
+    return series?.type === "bar" || series?.type === "line";
+  };
+
   useEffect(() => {
     const session = sessionStorage.getItem("user_session");
     if (session === null) {
       navigate("/login");
     }
   }, []);
-
-  const isBarOrLineSeries = (series: AgCartesianSeriesOptions | AgPolarSeriesOptions | AgHierarchySeriesOptions | AgTopologySeriesOptions | AgFlowProportionSeriesOptions | undefined): series is AgBarSeriesOptions | AgLineSeriesOptions => {
-    return series?.type === "bar" || series?.type === "line";
-  };
-
-  // const isPieSeries = (series: AgPieSeriesOptions): series is AgPieSeriesOptions => {
-  //   return series.type === "pie";
-  // };
 
   useEffect(() => {
     let newOptions: AgChartOptions = options;
@@ -249,6 +286,12 @@ const Home = () => {
       ]);
     }
   }, [message, currentTitle, value]);
+
+
+  // const isPieSeries = (series: AgPieSeriesOptions): series is AgPieSeriesOptions => {
+  //   return series.type === "pie";
+  // };
+
 
   return (
     <div className="app">
