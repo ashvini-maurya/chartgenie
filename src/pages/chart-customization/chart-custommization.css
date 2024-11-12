@@ -1,0 +1,22 @@
+.customization-panel {
+  padding: 1em;
+  background: #333;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customization-panel label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.customization-panel input[type="text"],
+.customization-panel input[type="color"] {
+  margin-top: 5px;
+  padding: 4px;
+  font-size: 14px;
+}

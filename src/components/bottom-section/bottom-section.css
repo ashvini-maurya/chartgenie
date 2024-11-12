@@ -1,0 +1,18 @@
+
+.input-box {
+  padding-left: 36px;
+}
+
+.upload-csv {
+  margin-left: -20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-100%, -50%);
+  white-space: nowrap;
+  display: none;
+}
+
+#attachment label div:hover span {
+  display: inline;
+}
