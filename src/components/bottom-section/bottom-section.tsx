@@ -5,13 +5,18 @@ import { AttachmentIcon, SubmitIcon } from "../../icons";
 import { ChangeEvent } from "react";
 
 interface ICgBottomSection {
-  getAttachment: (event: ChangeEvent<HTMLInputElement>) => void
+  getAttachment: (event: ChangeEvent<HTMLInputElement>) => void;
   getMessages: () => void;
   value: string;
   onChange: (e: any) => void;
 }
 
-const CgBottomSection = ({ getAttachment, getMessages, value, onChange }: ICgBottomSection) => {
+const CgBottomSection = ({
+  getAttachment,
+  getMessages,
+  value,
+  onChange,
+}: ICgBottomSection) => {
   return (
     <section className="bottomSection">
       <div className="inputContainer">
@@ -21,7 +26,7 @@ const CgBottomSection = ({ getAttachment, getMessages, value, onChange }: ICgBot
           value={value}
           onChange={onChange}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
               getMessages();
             }
           }}
@@ -31,14 +36,16 @@ const CgBottomSection = ({ getAttachment, getMessages, value, onChange }: ICgBot
         <div id="attachment">
           <label
             htmlFor="csv-upload"
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', position: 'relative' }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              position: "relative",
+            }}
           >
-            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <div style={{ display: "inline-flex", alignItems: "center" }}>
               <AttachmentIcon />
-              <span
-                className="upload-csv">
-                Upload CSV
-              </span>
+              <span className="upload-csv">Upload CSV</span>
             </div>
           </label>
           <input
@@ -46,7 +53,7 @@ const CgBottomSection = ({ getAttachment, getMessages, value, onChange }: ICgBot
             id="csv-upload"
             accept=".csv"
             onChange={getAttachment}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
           />
         </div>
 

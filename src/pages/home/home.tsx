@@ -1,18 +1,7 @@
 import "./home.css";
 
-import {
-  AgBarSeriesOptions,
-  AgCartesianSeriesOptions,
-  AgChartOptions,
-  AgFlowProportionSeriesOptions,
-  AgHierarchySeriesOptions,
-  AgLineSeriesOptions,
-  AgPieSeriesOptions,
-  AgPolarSeriesOptions,
-  AgTopologySeriesOptions,
-} from "ag-charts-community";
+import { AgBarSeriesOptions, AgChartOptions } from "ag-charts-community";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-
 import CgBottomSection from "../../components/bottom-section/bottom-section";
 import CgButton from "../../components/button/button";
 import CgChart from "../../components/chart/chart";
@@ -38,11 +27,11 @@ interface Chat {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [value, setValue] = useState<string>('');
+  const [value, setValue] = useState<string>("");
   const [message, setMessage] = useState<Message | null>(null);
   const [previousChats, setPreviousChats] = useState<Chat[]>([]);
   const [currentTitle, setCurrentTitle] = useState<string | null>(null);
-  const [chartType, setChartType] = useState("line");
+  const [chartType, setChartType] = useState("pie");
   const lastMessageRef = useRef<HTMLLIElement | null>(null);
   const [chartColor, setChartColor] = useState<string>("#4caf50");
   const [xAxisLabel, setXAxisLabel] = useState<string>("X Axis");
@@ -54,6 +43,7 @@ const Home = () => {
     data: [],
     series: [],
   });
+  const [pieOptions, setPieOptions] = useState<AgChartOptions>({ series: [] });
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
@@ -75,10 +65,9 @@ const Home = () => {
   const uniqueTitles = Array.from(
     new Set(previousChats.map((previousChat) => previousChat.title))
   );
-
   useEffect(() => {
     if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [currentChat]);
 
@@ -92,23 +81,38 @@ const Home = () => {
           const headers = Object.keys(parsedData[0] || {});
 
           if (headers.length < 2) {
-            console.error("CSV must contain at least two columns for X and Y axes.");
+            console.error(
+              "CSV must contain at least two columns for X and Y axes."
+            );
             return;
           }
 
           const xAxis = headers[0];
+          setXAxisLabel(xAxis);
           const yAxis = headers[1];
+          setYAxisLabel(yAxis);
+          const chartData = parsedData.map((row) => ({
+            ...row,
+            [xAxis]: row[xAxis],
+            [yAxis]: Number(row[yAxis]),
+          }));
           setOptions({
-            data: parsedData.map((row) => ({
-              ...row,
-              [xAxis]: row[xAxis],
-              [yAxis]: Number(row[yAxis]),
-            })),
+            data: chartData,
             series: [
               {
-                type: "line",
+                type: chartType as any,
                 xKey: xAxis,
                 yKey: yAxis,
+              },
+            ],
+          });
+          setPieOptions({
+            series: [
+              {
+                data: chartData,
+                type: "pie",
+                angleKey: yAxis,
+                calloutLabelKey: xAxis,
               },
             ],
           });
@@ -118,10 +122,12 @@ const Home = () => {
     } else {
       console.error("Please upload a valid CSV file.");
     }
-  }
+  };
 
   const handleApiResponse = (csvString: string) => {
-    const parsedResult = Papa.parse<Record<string, string>>(csvString, { header: true });
+    const parsedResult = Papa.parse<Record<string, string>>(csvString, {
+      header: true,
+    });
     const parsedData = parsedResult.data;
 
     if (parsedData.length === 0) {
@@ -157,28 +163,38 @@ const Home = () => {
   const getMessages = async () => {
     if (!value.trim()) return;
     const options = {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         message: value,
       }),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     };
 
     try {
-      const response = await fetch('http://localhost:8000/completions', options);
+      const response = await fetch(
+        "http://localhost:8000/completions",
+        options
+      );
       const data = await response.json();
       const assistantMessage = data?.choices[0]?.message as Message;
 
-
       setPreviousChats((prevChats) => [
         ...prevChats,
-        { title: currentTitle, role: 'user', content: value },
-        { title: currentTitle, role: assistantMessage.role, content: assistantMessage.content },
+        {
+          title: currentTitle,
+          role: "user",
+          content: value,
+        },
+        {
+          title: currentTitle,
+          role: assistantMessage.role,
+          content: assistantMessage.content,
+        },
       ]);
       setMessage(assistantMessage);
-      setValue('');
+      setValue("");
 
       if (data?.choices[0]?.message?.content) {
         handleApiResponse(data?.choices[0].message.content);
@@ -190,27 +206,17 @@ const Home = () => {
 
   const createNewChat = () => {
     setMessage(null);
-    setValue('');
+    setValue("");
     setCurrentTitle(null);
   };
 
   const handleClick = (uniqueTitle: string | null) => {
     setCurrentTitle(uniqueTitle);
-    setValue('');
+    setValue("");
   };
 
   const handleChartType = (e: any) => {
     setChartType(e.target.value);
-  };
-
-  const isBarOrLineSeries = (
-    series: AgCartesianSeriesOptions |
-      AgPolarSeriesOptions |
-      AgHierarchySeriesOptions |
-      AgTopologySeriesOptions |
-      AgFlowProportionSeriesOptions |
-      undefined): series is AgBarSeriesOptions | AgLineSeriesOptions => {
-    return series?.type === "bar" || series?.type === "line";
   };
 
   useEffect(() => {
@@ -221,15 +227,14 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    let newOptions: AgChartOptions = options;
     if (chartType === "bar" || chartType === "line") {
-      newOptions = {
+      const newOptions: AgChartOptions = {
         data: options.data,
         series: [
           {
             type: chartType,
-            xKey: isBarOrLineSeries(options.series?.[0]) ? options.series?.[0]?.xKey || "x" : "",
-            yKey: isBarOrLineSeries(options.series?.[0]) ? options.series?.[0]?.yKey || "y" : "",
+            xKey: xAxisLabel,
+            yKey: yAxisLabel,
             fill: chartColor,
             label: showLabels ? { enabled: true } : { enabled: false },
           } as AgBarSeriesOptions,
@@ -247,23 +252,8 @@ const Home = () => {
           },
         ],
       };
+      setOptions(newOptions);
     }
-    else if (chartType === "pie") {
-      if (options.series?.[0]?.type === "pie") {
-        console.log("hello pie: ", options)
-        newOptions = {
-          data: options.data,
-          series: [
-            {
-              type: "pie",
-              angleKey: options.series?.[0]?.angleKey || "y",
-              labelKey: options.series?.[0]?.legendItemKey || "x",
-            } as AgPieSeriesOptions<any>,
-          ],
-        };
-      }
-    }
-    setOptions(newOptions);
   }, [chartType, chartColor, xAxisLabel, yAxisLabel, showLabels]);
 
   useEffect(() => {
@@ -275,7 +265,7 @@ const Home = () => {
         ...previousChats,
         {
           title: currentTitle,
-          role: 'user',
+          role: "user",
           content: value,
         },
         {
@@ -285,18 +275,14 @@ const Home = () => {
         },
       ]);
     }
-  }, [message, currentTitle, value]);
-
-
-  // const isPieSeries = (series: AgPieSeriesOptions): series is AgPieSeriesOptions => {
-  //   return series.type === "pie";
-  // };
-
+  }, [message, currentTitle]);
 
   return (
     <div className="app">
       <CgSidebar>
-        <CgButton type="button" onClick={createNewChat}>New Chat</CgButton>
+        <CgButton type="button" onClick={createNewChat}>
+          New Chat
+        </CgButton>
         <nav>
           <ul className="history">
             {uniqueTitles?.map((uniqueTitle, index) => (
@@ -310,7 +296,7 @@ const Home = () => {
 
       <section className="main">
         <CgHomeHeader onClick={handleLogout} />
-        <div className="feed">
+        <div className="chart-section">
           <button onClick={toggleModal}>Customize Chart</button>
           <CgModal isOpen={isModalOpen} onClose={toggleModal}>
             <ChartCustomization
@@ -321,21 +307,34 @@ const Home = () => {
               yAxisLabel={yAxisLabel}
               showLabels={showLabels}
               setYAxisLabel={setYAxisLabel}
-              setShowLabels={(e) => setShowLabels(e)} />
+              setShowLabels={(e) => setShowLabels(e)}
+            />
           </CgModal>
-          <select onChange={handleChartType} value={chartType} className="chart-selection-dropdown">
+          <select
+            onChange={handleChartType}
+            value={chartType}
+            className="chart-selection-dropdown"
+          >
             <option value="bar">Bar</option>
             <option value="line">Line</option>
             <option value="pie">Pie</option>
           </select>
-          <div style={{ width: "100%" }}>
-            <CgChart chartOptions={options} />
+          <div style={{ width: "400px" }}>
+            <CgChart
+              chartOptions={chartType === "pie" ? pieOptions : options}
+            />
           </div>
+        </div>
+        <div className="feed">
           <ul>
             {currentChat?.map((chatMessage, index) => (
               <li
                 key={`${chatMessage.role}-${index}`}
-                className={chatMessage.role === "user" ? "user-message" : "assistant-message"}
+                className={
+                  chatMessage.role === "user"
+                    ? "user-message"
+                    : "assistant-message"
+                }
                 ref={index === currentChat.length - 1 ? lastMessageRef : null}
               >
                 <p className="role">{chatMessage.role}</p>
