@@ -1,46 +1,34 @@
-# Getting Started with Create React App
+# Functionalities of the App
+##### The chartgenie is an intractive app which has the following functionalities:
+- Allow user signup/login
+- Upload csv file and the respective charts will be shown
+- It also allows to see different types of chart like Line chart, Bar chart and Pie chart
+- It also allows chart customization, we can update the chart for the color, x-axis and y-axis labels
+- With the input field, it allows real time intraction with the openai services 
+- With the openai intraction user can ask for different kind of data in csv format (currently we are supporting csv format only)
+- We can also create another new chat thread without impacting the previous ones with the `New Chat` button option
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## To run the app locally, follow the below steps:
+- Clone the repo with `git clone https://github.com/ashvini-maurya/chartgenie.git`
+- Navigate to the repo with `cd chartgenie`
+- Run `npm install` to install the required packages
+- Add the openAPI API_KEY in .env file
+- Start the backend server with `npm run start:be`
+- In another terminal start the frontend server with `npm run start:fe`
+- Go to the browser and open local server, generally it's on http://localhost:3000 
 
-## Available Scripts
+## To run the unit tests locally:
+- From the terminal run `npm run test`
+- This command launches the test runner in the interactive watch mode and will run all tests and show the results something like:
+```
+Test Suites: 3 passed, 3 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        1.127 s
+Ran all test suites.
+```
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Limitations:
+- Only csv format is supported
+- If we provide random input then openai might not respond with the proper data response in csv format
+- Reloading the app will loose everything on UI because the data is not persistent
